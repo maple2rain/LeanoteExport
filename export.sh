@@ -5,12 +5,14 @@ _work_dir=/opt/Leanote4MD
 _tmp_dir=/opt/Leanote4MD/tmp
 _date=`date +%Y-%m-%d`
 _date_dir=${_work_dir}/${_date}
+_img_dir=../post_img
 logfile=${_date}.log
 
 mkdir -p ${_date_dir}
+mkdir -p ${_img_dir}
 
 # execute leanote export py
-python2 Leanote4MD.py export | tee $logfile
+python2 Leanote4MD.py export
 
 # below deal for jekyll
 
@@ -24,7 +26,7 @@ files=`\ls *.md`
 
 # modify date format's separator from '/' to '-'
 for file in $files; do
-    echo $file
+    echo $file >> $logfile
     sed '1,3s/\//-/g' "$file" -i
 done
 
@@ -41,19 +43,30 @@ done
 pngs=`\ls *.PNG`
 for file in $pngs; do
     name=$(basename $file .PNG)
-    echo "name is" $name
+    echo "name is" $name >> $logfile
     mv $file $name
+    mv $name ${_img_dir}/
 done
+
+# remove suffix of .GIF
+gifs=`\ls *.GIF`
+for file in $gifs; do
+    name=$(basename $file .GIF)
+    echo "name is" $name >> $logfile
+    mv $file $name
+    mv $name ${_img_dir}/
+done
+
 
 # modify picture link
 files=`\ls *.md`
 for file in $files; do
-    echo $file
-    sed 's/https:\/\/leanote.com\/api\/file\/getImage?fileId=//g' "$file" -i
+    echo $file >> $logfile
+    sed 's/https:\/\/leanote.com\/api\/file\/getImage?fileId=/..\/post_img\//g' "$file" -i
 done
 
 # move files
 mv ${_tmp_dir}/* ${_date_dir}
 
 # remove script and logfile
-mv ${_date_dir}/*.sh ${_date_dir}/Leanote* ${_date_dir}/$logfile ${_tmp_dir}/
+mv ${_date_dir}/*.sh ${_date_dir}/Leanote* ${_date_dir}/*.log ${_tmp_dir}/
